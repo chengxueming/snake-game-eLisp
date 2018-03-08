@@ -1,9 +1,11 @@
 ;; Snake game
+;; TODO let snake be loner when eat food
+;; TODO solve crash when snake beyond the boundary
 
 (defvar snake-buffer-name "*Snake*")
 
 
-(defun snake ()
+(defun snake_game ()
   "Start playing snake"
   (interactive)
   (switch-to-buffer snake-buffer-name)
@@ -33,15 +35,49 @@ example, ((0 0) (0 1) (0 2)) is a snake of length 3")
 (defvar *snake-head* nil
   "Will contain the coordinance of the head e.g (2,0)")
 
+(defvar *food-row* (random *area-height*)
+  "food location row count at game area")
+
+(defvar *food-column* (random *area-width*)
+  "food location column count at game area")
+
+(defvar *direction* 3
+  "direction the snake move in game")
+
 (defun snake-init()
   "Start a new game of snake"
   (setq *snake-body* nil)
   (setq *snake-area*
         (make-vector
          (* *area-height* *area-width*) ?\-))
+  (generate-food)
+  (setq *snake-timer* (run-with-timer 1 1 'update-game))
   (snake-player-init)
   (snake-set-player)
   (snake-print-area)
+  )
+
+(defun update-game()
+  "update game main logic"
+  (if (eq *direction* 1) (snake-move-up)
+    (if (eq *direction* 2) (snake-move-right)
+                        (if (eq *direction* 3) (snake-move-down)
+                          (if (eq *direction* 4) (snake-move-left)
+                            ))))
+  (touch-food)
+  (snake-set-player)
+  (snake-print-area))
+
+(defun kill-timer()
+  (interactive)
+  (when fireplace--timer
+    (cancel-timer fireplace--timer)
+  ))
+
+(defun generate-food()
+  "generate food random"
+  (setq *food-row* (random *area-height*))
+  (setq *food-column* (random *area-width*))
   )
 
 (defun snake-print-area ()
@@ -59,8 +95,25 @@ example, ((0 0) (0 1) (0 2)) is a snake of length 3")
       (delete-forward-char 1)
       (insert "O"))
 
-    (goto-char (point-max))));; Put cursor outside the area
+    (goto-char (point-min))
+    (forward-line (- *food-row* 1))
+    (forward-char *food-column*)
+    (delete-forward-char 1)
+    (insert "X")
+    (goto-char (point-max))
+    ));; Put cursor outside the area
 
+(defun snake-longer ()
+   "make snake longer"
+   (interactive)
+   (setq *snake-length* (+ *snake-length* 1))
+   (snake-init))
+
+(defun print-snake-body ()
+  "print snake body"
+  (interactive)
+  (dolist (cell *snake-body*)
+    (message "%s,%s;" (nth 0 cell) (nth 1 cell))))
 
 (defun area-get-square (row column)
   "Get the value in the (row, column) square."
@@ -88,6 +141,14 @@ example, ((0 0) (0 1) (0 2)) is a snake of length 3")
           (nth 0 (nth length *snake-body*))
           (nth 1 (nth length *snake-body*)) ?\O)))
 
+(defun touch-food ()
+  "check is snake touch food, and do somthing"
+  (setq snake-head (nth 0 *snake-body*))
+  (message "snake head is %s,%s;" (nth 0 snake-head) (nth 1 snake-head))
+  (if (and (eq (nth 0 snake-head) *food-row*) (eq (nth 1 snake-head) *food-column*))
+      (message "touch food")))
+
+
 (defun snake-move-right ()
   "Move snake to the right by setting extra
    point to the right and remove point from tail"
@@ -96,9 +157,7 @@ example, ((0 0) (0 1) (0 2)) is a snake of length 3")
   (setq *snake-body*
         (butlast (cons (list (nth 0 (nth 0 *snake-body*)) ;;Add element to list
                              (+ 1 (nth 1 (nth 0 *snake-body*))))
-                       *snake-body*)))
-  (snake-set-player)
-  (snake-print-area))
+                       *snake-body*))))
 
 (defun snake-move-down ()
   "Move snake down by setting extra
@@ -108,9 +167,7 @@ example, ((0 0) (0 1) (0 2)) is a snake of length 3")
   (setq *snake-body*
         (butlast (cons (list (+ 1 (nth 0 (nth 0 *snake-body*))) ;;Add element to list
                              (nth 1 (nth 0 *snake-body*)))
-                       *snake-body*)))
-  (snake-set-player)
-  (snake-print-area))
+                       *snake-body*))))
 
 (defun snake-move-left ()
   "Move snake to the left by setting extra
@@ -120,9 +177,7 @@ example, ((0 0) (0 1) (0 2)) is a snake of length 3")
   (setq *snake-body*
         (butlast (cons (list (nth 0 (nth 0 *snake-body*)) ;;Add element to list
                              (- (nth 1 (nth 0 *snake-body*)) 1))
-                       *snake-body*)))
-  (snake-set-player)
-  (snake-print-area))
+                       *snake-body*))))
 
 (defun snake-move-up ()
   "Move snake to the up by setting extra
@@ -132,8 +187,6 @@ example, ((0 0) (0 1) (0 2)) is a snake of length 3")
     (setq *snake-body*
           (butlast (cons (list (- (nth 0 (nth 0 *snake-body*)) 1) ;;Add element to list
                                (nth 1 (nth 0 *snake-body*)))
-                         *snake-body*)))
-    (snake-set-player)
-    (snake-print-area))
+                         *snake-body*))))
 
 
