@@ -17,7 +17,9 @@
   (define-key snake-mode-map (kbd "<right>") 'snake-move-right-key)
   (define-key snake-mode-map (kbd "<left>") 'snake-move-left-key)
   (define-key snake-mode-map (kbd "<up>")  'snake-move-up-key)
-  (define-key snake-mode-map (kbd "<down>") 'snake-move-down-key))
+  (define-key snake-mode-map (kbd "<down>") 'snake-move-down-key)
+  (define-key snake-mode-map (kbd "q") 'kill-timer)
+  (define-key snake-mode-map (kbd "Q") 'kill-timer))
 
 (defconst *area-height* 20
   "The height of the area")
@@ -94,9 +96,9 @@ example, ((0 0) (0 1) (0 2)) is a snake of length 3")
 
 (defun kill-timer()
   (interactive)
-  (when fireplace--timer
-    (cancel-timer fireplace--timer)
-  ))
+  (when *snake-timer*
+    (cancel-timer *snake-timer*)
+    (kill-buffer snake-buffer-name)))
 
 (defun generate-food()
   "generate food random"
@@ -205,9 +207,13 @@ example, ((0 0) (0 1) (0 2)) is a snake of length 3")
    point to the left and remove point from tail"
   (interactive)
   (message "move-left")
+  (setq head-column (- (nth 1 (nth 0 *snake-body*)) 1))
+  (if (< head-column 0)
+      (setq head-column (- *area-width*  1))
+    )
   (setq *snake-body*
         (butlast (cons (list (nth 0 (nth 0 *snake-body*)) ;;Add element to list
-                             (- (nth 1 (nth 0 *snake-body*)) 1))
+                             head-column)
                        *snake-body*))))
 
 (defun snake-move-up ()
@@ -215,8 +221,11 @@ example, ((0 0) (0 1) (0 2)) is a snake of length 3")
    point to the top and remove point from tail"
   (interactive)
     (message "move-up")
+    (setq head-row (- 1 (nth 0 (nth 0 *snake-body*))))
+    (if (< head-row 0)
+        (setq head-row (- *area-height* 1)))
     (setq *snake-body*
-          (butlast (cons (list (- (nth 0 (nth 0 *snake-body*)) 1) ;;Add element to list
+          (butlast (cons (list head-row ;;Add element to list
                                (nth 1 (nth 0 *snake-body*)))
                          *snake-body*))))
 
