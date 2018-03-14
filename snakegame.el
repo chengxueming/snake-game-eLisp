@@ -14,10 +14,10 @@
 
 (define-derived-mode snake-mode special-mode
   "snake"
-  (define-key snake-mode-map (kbd "<right>") 'snake-move-right)
-  (define-key snake-mode-map (kbd "<left>") 'snake-move-left)
-  (define-key snake-mode-map (kbd "<up>") 'snake-move-up)
-  (define-key snake-mode-map (kbd "<down>") 'snake-move-down))
+  (define-key snake-mode-map (kbd "<right>") 'snake-move-right-key)
+  (define-key snake-mode-map (kbd "<left>") 'snake-move-left-key)
+  (define-key snake-mode-map (kbd "<up>")  'snake-move-up-key)
+  (define-key snake-mode-map (kbd "<down>") 'snake-move-down-key))
 
 (defconst *area-height* 20
   "The height of the area")
@@ -56,6 +56,30 @@ example, ((0 0) (0 1) (0 2)) is a snake of length 3")
   (snake-set-player)
   (snake-print-area)
   )
+
+(defun snake-move-up-key()
+  (interactive)
+  (snake-move 1)
+  )
+
+(defun snake-move-right-key()
+  (interactive)
+  (snake-move 2)
+  )
+
+(defun snake-move-down-key()
+  (interactive)
+  (snake-move 3)
+  )
+
+(defun snake-move-left-key()
+  (interactive)
+  (snake-move 4)
+  )
+
+(defun snake-move(direction)
+  (setq *direction* direction)
+    )
 
 (defun update-game()
   "update game main logic"
@@ -154,9 +178,13 @@ example, ((0 0) (0 1) (0 2)) is a snake of length 3")
    point to the right and remove point from tail"
   (interactive)
   (message "move-right")
+  (setq head-column (+ 1 (nth 1 (nth 0 *snake-body*))))
+  (if (>= head-column *area-width*)
+      (setq head-column 0)
+      )
   (setq *snake-body*
         (butlast (cons (list (nth 0 (nth 0 *snake-body*)) ;;Add element to list
-                             (+ 1 (nth 1 (nth 0 *snake-body*))))
+                             head-column)
                        *snake-body*))))
 
 (defun snake-move-down ()
@@ -164,8 +192,11 @@ example, ((0 0) (0 1) (0 2)) is a snake of length 3")
    point to the bottom and remove point from tail"
   (interactive)
   (message "move-down")
+  (setq head-row (+ 1 (nth 0 (nth 0 *snake-body*))))
+  (if (>= head-row *area-height*)
+      (setq head-row 0))
   (setq *snake-body*
-        (butlast (cons (list (+ 1 (nth 0 (nth 0 *snake-body*))) ;;Add element to list
+        (butlast (cons (list head-row ;;Add element to list
                              (nth 1 (nth 0 *snake-body*)))
                        *snake-body*))))
 
